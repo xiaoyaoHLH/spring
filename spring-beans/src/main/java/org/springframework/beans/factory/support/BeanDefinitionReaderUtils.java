@@ -55,17 +55,23 @@ public class BeanDefinitionReaderUtils {
 	 */
 	public static AbstractBeanDefinition createBeanDefinition(
 			String parentName, String className, ClassLoader classLoader) throws ClassNotFoundException {
-
 		GenericBeanDefinition bd = new GenericBeanDefinition();
+		// parentName可能为空
 		bd.setParentName(parentName);
-		if (className != null) {
-			if (classLoader != null) {
-				bd.setBeanClass(ClassUtils.forName(className, classLoader));
-			}
-			else {
-				bd.setBeanClassName(className);
-			}
+
+		// 类的全路径为空
+		if(className == null){
+			return bd;
 		}
+
+		// classLoader不为空,使用传入的classloader同一虚拟机加载对象
+		if (classLoader != null) {
+			bd.setBeanClass(ClassUtils.forName(className, classLoader));
+			return bd;
+		}
+
+		// 只记录className
+		bd.setBeanClassName(className);
 		return bd;
 	}
 
