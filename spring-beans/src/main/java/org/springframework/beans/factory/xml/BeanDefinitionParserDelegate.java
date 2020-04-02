@@ -438,9 +438,11 @@ public class BeanDefinitionParserDelegate {
 	 */
 	public BeanDefinitionHolder parseBeanDefinitionElement(Element ele, BeanDefinition containingBean) {
 		// 获取id
+		// Bean的唯一标识名
 		String id = ele.getAttribute(ID_ATTRIBUTE);
 
 		// 获取name
+		// 用来为id创建一个或多个别名
 		String nameAttr = ele.getAttribute(NAME_ATTRIBUTE);
 
 		List<String> aliases = new ArrayList<String>();
@@ -460,7 +462,7 @@ public class BeanDefinitionParserDelegate {
 			}
 		}
 
-		// 检查嵌套重复
+		// 检查唯一性
 		if (containingBean == null) {
 			checkNameUniqueness(beanName, aliases, ele);
 		}
@@ -537,10 +539,11 @@ public class BeanDefinitionParserDelegate {
 	public AbstractBeanDefinition parseBeanDefinitionElement(
 			Element ele, String beanName, BeanDefinition containingBean) {
 
-		// 记录解析元素
+		// 记录解析id
 		this.parseState.push(new BeanEntry(beanName));
 
 		// 解析class属性
+		// 用来定义类的全限定名（包名＋类名）
 		String className = null;
 		if (ele.hasAttribute(CLASS_ATTRIBUTE)) {
 			className = ele.getAttribute(CLASS_ATTRIBUTE).trim();
@@ -548,6 +551,7 @@ public class BeanDefinitionParserDelegate {
 
 		try {
 			// 解析parent属性
+			// 表示继承的父类
 			String parent = null;
 			if (ele.hasAttribute(PARENT_ATTRIBUTE)) {
 				parent = ele.getAttribute(PARENT_ATTRIBUTE);
@@ -559,13 +563,18 @@ public class BeanDefinitionParserDelegate {
 
 			// 对Element所有元素属性进行解析
 			parseBeanDefinitionAttributes(ele, beanName, containingBean, bd);
+
+			// 解析description
 			bd.setDescription(DomUtils.getChildElementValueByTagName(ele, DESCRIPTION_ELEMENT));
 
 			// 解析元数据
+			// meta
 			parseMetaElements(ele, bd);
 			// 解析lookup-method属性
+			// 获取器注入
 			parseLookupOverrideSubElements(ele, bd.getMethodOverrides());
 			// 解析replaced-method属性
+			// 方法替换
 			parseReplacedMethodSubElements(ele, bd.getMethodOverrides());
 
 			// 解析构造函数
@@ -610,21 +619,24 @@ public class BeanDefinitionParserDelegate {
 		if (ele.hasAttribute(SINGLETON_ATTRIBUTE)) {
 			error("Old 1.x 'singleton' attribute in use - upgrade to 'scope' declaration", ele);
 		}
+		// scope
 		else if (ele.hasAttribute(SCOPE_ATTRIBUTE)) {
 			bd.setScope(ele.getAttribute(SCOPE_ATTRIBUTE));
 		}
-		// 其他情况使用在内部bean定义的情况下，从包含bean中获取缺省值
+		// 其他情况使用在内部bean定义的情况下，从包含bean中获取缺省值""
 		else if (containingBean != null) {
 			// Take default from containing bean in case of an inner bean definition.
 			bd.setScope(containingBean.getScope());
 		}
 
 		// 解析abstract
+		// 默认为”false”：用来定义Bean是否为抽象Bean。它表示这个Bean将不会被实例化，一般用于父类Bean，因为父类Bean主要是供子类Bean继承使用
 		if (ele.hasAttribute(ABSTRACT_ATTRIBUTE)) {
 			bd.setAbstract(TRUE_VALUE.equals(ele.getAttribute(ABSTRACT_ATTRIBUTE)));
 		}
 
 		// 解析lazy-init
+		// 用来定义这个Bean是否实现懒初始化。如果为“false”，它将在BeanFactory启动时初始化所有的Singleton Bean。反之，如果为“true”,它只在Bean请求时才开始创建Singleton Bean。
 		String lazyInit = ele.getAttribute(LAZY_INIT_ATTRIBUTE);
 		if (DEFAULT_VALUE.equals(lazyInit)) {
 			lazyInit = this.defaults.getLazyInit();
@@ -632,14 +644,25 @@ public class BeanDefinitionParserDelegate {
 		bd.setLazyInit(TRUE_VALUE.equals(lazyInit));
 
 		// 解析autowire
+		// “no”:不使用自动装配功能。
+		// “byName”:通过Bean的属性名实现自动装配。
+		// “byType”:通过Bean的类型实现自动装配。
+		// “constructor”:类似于byType，但它是用于构造函数的参数的自动组装。
+		// “autodetect”:通过Bean类的反省机制（introspection）决定是使用“constructor”还是使用“byType”。
 		String autowire = ele.getAttribute(AUTOWIRE_ATTRIBUTE);
 		bd.setAutowireMode(getAutowireMode(autowire));
 
 		// 解析dependency-check
+		// 它用来确保Bean组件通过JavaBean描述的所以依赖关系都得到满足。在与自动装配功能一起使用时，它特别有用
+		// none：不进行依赖检查。
+		// objects：只做对象间依赖的检查。
+		// simple：只做原始类型和String类型依赖的检查
+		// all：对所有类型的依赖进行检查。它包括了前面的objects和simple。
 		String dependencyCheck = ele.getAttribute(DEPENDENCY_CHECK_ATTRIBUTE);
 		bd.setDependencyCheck(getDependencyCheck(dependencyCheck));
 
 		// 解析depends-on
+		// 这个Bean在初始化时依赖的对象，这个对象会在这个Bean初始化之前创建。
 		if (ele.hasAttribute(DEPENDS_ON_ATTRIBUTE)) {
 			String dependsOn = ele.getAttribute(DEPENDS_ON_ATTRIBUTE);
 			bd.setDependsOn(StringUtils.tokenizeToStringArray(dependsOn, MULTI_VALUE_ATTRIBUTE_DELIMITERS));
@@ -664,6 +687,7 @@ public class BeanDefinitionParserDelegate {
 		}
 
 		// 解析init-method
+		// 用来定义Bean的初始化方法，它会在Bean组装之后调用。它必须是一个无参数的方法。
 		if (ele.hasAttribute(INIT_METHOD_ATTRIBUTE)) {
 			String initMethodName = ele.getAttribute(INIT_METHOD_ATTRIBUTE);
 			if (!"".equals(initMethodName)) {
@@ -678,6 +702,7 @@ public class BeanDefinitionParserDelegate {
 		}
 
 		// 解析destroy-method
+		// 用来定义Bean的销毁方法，它在BeanFactory关闭时调用。同样，它也必须是一个无参数的方法。它只能应用于singleton Bean。
 		if (ele.hasAttribute(DESTROY_METHOD_ATTRIBUTE)) {
 			String destroyMethodName = ele.getAttribute(DESTROY_METHOD_ATTRIBUTE);
 			bd.setDestroyMethodName(destroyMethodName);
@@ -690,11 +715,13 @@ public class BeanDefinitionParserDelegate {
 		}
 
 		// 解析factory-method
+		// 定义创建该Bean对象的工厂方法。它用于下面的“factory-bean”，表示这个Bean是通过工厂方法创建。此时，“class”属性失效。
 		if (ele.hasAttribute(FACTORY_METHOD_ATTRIBUTE)) {
 			bd.setFactoryMethodName(ele.getAttribute(FACTORY_METHOD_ATTRIBUTE));
 		}
 
 		// 解析factory-bean
+		// 定义创建该Bean对象的工厂类。如果使用了“factory-bean”则“class”属性失效。
 		if (ele.hasAttribute(FACTORY_BEAN_ATTRIBUTE)) {
 			bd.setFactoryBeanName(ele.getAttribute(FACTORY_BEAN_ATTRIBUTE));
 		}
@@ -717,15 +744,21 @@ public class BeanDefinitionParserDelegate {
 	}
 
 	public void parseMetaElements(Element ele, BeanMetadataAttributeAccessor attributeAccessor) {
+		// 获取当前节点的子元素
 		NodeList nl = ele.getChildNodes();
 		for (int i = 0; i < nl.getLength(); i++) {
 			Node node = nl.item(i);
+			// 提取meta
 			if (isCandidateElement(node) && nodeNameEquals(node, META_ELEMENT)) {
 				Element metaElement = (Element) node;
+				// key
 				String key = metaElement.getAttribute(KEY_ATTRIBUTE);
+				// value
 				String value = metaElement.getAttribute(VALUE_ATTRIBUTE);
+				// 构造BeanMetadataAttribute
 				BeanMetadataAttribute attribute = new BeanMetadataAttribute(key, value);
 				attribute.setSource(extractSource(metaElement));
+				// 记录信息
 				attributeAccessor.addMetadataAttribute(attribute);
 			}
 		}
@@ -819,6 +852,8 @@ public class BeanDefinitionParserDelegate {
 		NodeList nl = beanEle.getChildNodes();
 		for (int i = 0; i < nl.getLength(); i++) {
 			Node node = nl.item(i);
+			// <bean> 的子元素并且为lookup-method
+			// <lookup-method name="getBean" bean="test" />
 			if (isCandidateElement(node) && nodeNameEquals(node, LOOKUP_METHOD_ELEMENT)) {
 				Element ele = (Element) node;
 				String methodName = ele.getAttribute(NAME_ATTRIBUTE);
@@ -837,14 +872,19 @@ public class BeanDefinitionParserDelegate {
 		NodeList nl = beanEle.getChildNodes();
 		for (int i = 0; i < nl.getLength(); i++) {
 			Node node = nl.item(i);
+			// <replaced-method name="" replacer="" />
 			if (isCandidateElement(node) && nodeNameEquals(node, REPLACED_METHOD_ELEMENT)) {
 				Element replacedMethodEle = (Element) node;
+				// 提取要替换的 旧的方法
 				String name = replacedMethodEle.getAttribute(NAME_ATTRIBUTE);
+				// 提取新的方法
 				String callback = replacedMethodEle.getAttribute(REPLACER_ATTRIBUTE);
 				ReplaceOverride replaceOverride = new ReplaceOverride(name, callback);
 				// Look for arg-type match elements.
+				// arg-type
 				List<Element> argTypeEles = DomUtils.getChildElementsByTagName(replacedMethodEle, ARG_TYPE_ELEMENT);
 				for (Element argTypeEle : argTypeEles) {
+					// 记录参数match
 					String match = argTypeEle.getAttribute(ARG_TYPE_MATCH_ATTRIBUTE);
 					match = (StringUtils.hasText(match) ? match : DomUtils.getTextValue(argTypeEle));
 					if (StringUtils.hasText(match)) {
