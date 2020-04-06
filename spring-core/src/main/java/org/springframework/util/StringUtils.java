@@ -590,6 +590,7 @@ public abstract class StringUtils {
 	 * @param relativePath the relative path to apply
 	 * (relative to the full file path above)
 	 * @return the full file path that results from applying the relative path
+	 * 路径拼接
 	 */
 	public static String applyRelativePath(String path, String relativePath) {
 		int separatorIndex = path.lastIndexOf(FOLDER_SEPARATOR);

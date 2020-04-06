@@ -58,6 +58,7 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	/**
 	 * Constant for the default scope name: {@code ""}, equivalent to singleton
 	 * status unless overridden from a parent bean definition (if applicable).
+	 * bean 的作用范围，对应bean的scope
 	 */
 	public static final String SCOPE_DEFAULT = "";
 
@@ -136,53 +137,135 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 
 	private volatile Object beanClass;
 
+	/**
+	 * bean 的作用范围，对应bean的scope
+	 */
 	private String scope = SCOPE_DEFAULT;
 
+	/**
+	 * 是否为抽象类，对应bean的abstract
+	 */
 	private boolean abstractFlag = false;
 
+	/**
+	 * 是否延迟加载，对应bean的lazy-init
+	 */
 	private boolean lazyInit = false;
 
+	/**
+	 * 自动注入模式，对应bean的autowire
+	 */
 	private int autowireMode = AUTOWIRE_NO;
 
+	/**
+	 * 依赖检查，spring 3.0 后弃用这个属性
+	 */
 	private int dependencyCheck = DEPENDENCY_CHECK_NONE;
 
+	/**
+	 * 表示一个bean实例化依靠另一个bean先实例化，对应bean的depend-on
+	 */
 	private String[] dependsOn;
 
+	/**
+	 * 当为false时，他不会被考虑作为其他bean自动装配的候选者，但是该bean本身还是可以使用自动装配来注入其他的bean
+	 */
 	private boolean autowireCandidate = true;
 
+	/**
+	 * 出现多个候选者时, 将其作为首选, 对应bean的primary
+	 */
 	private boolean primary = false;
 
+	/**
+	 * 用户记录qualifier, 对应bean的qualifier
+	 */
 	private final Map<String, AutowireCandidateQualifier> qualifiers =
 			new LinkedHashMap<String, AutowireCandidateQualifier>(0);
 
+	/**
+	 * 允许访问非公开的构造器和方法
+	 */
 	private boolean nonPublicAccessAllowed = true;
 
+	/**
+	 * 是否以一种宽松的模式解析构造函数
+	 */
 	private boolean lenientConstructorResolution = true;
 
+	/**
+	 * 记录构造函数注入属性，对应bean属性constructor-arg
+	 */
 	private ConstructorArgumentValues constructorArgumentValues;
 
+	/**
+	 * 普通属性集合
+	 */
 	private MutablePropertyValues propertyValues;
 
+	/**
+	 * 方法重写持有者，记录lookup-method,replaced-method
+	 */
 	private MethodOverrides methodOverrides = new MethodOverrides();
 
+	/**
+	 * 对应bean属性factory-bean
+	 * 	<bean id="serviceLocator" class="examples.DefaultServiceLocator" />
+	 *
+	 * 	<bean id="clientService"
+	 * 		factory-bean="serviceLocator"
+	 * 		factory-method="createClientServiceInstance"/>
+	 */
 	private String factoryBeanName;
 
+	/**
+	 * 对应bean属性factory-method
+	 * 	<bean id="serviceLocator" class="examples.DefaultServiceLocator" />
+	 *
+	 * 	<bean id="clientService"
+	 * 		factory-bean="serviceLocator"
+	 * 		factory-method="createClientServiceInstance"/>
+	 */
 	private String factoryMethodName;
 
+	/**
+	 * 初始化方法, 对应bean属性init-method
+	 */
 	private String initMethodName;
 
+	/**
+	 * 销毁方法, 对应bean属性destroy-method
+	 */
 	private String destroyMethodName;
 
+	/**
+	 * 是否执行init-method
+	 */
 	private boolean enforceInitMethod = true;
 
+	/**
+	 * 是否执行destroy-method
+	 */
 	private boolean enforceDestroyMethod = true;
 
+	/**
+	 * 是否是用户自定义的不是应用程序本身定义的，创建aop时候为true
+	 */
 	private boolean synthetic = false;
 
+	/**
+	 * 定义这个bean的应用
+	 */
 	private int role = BeanDefinition.ROLE_APPLICATION;
 
+	/**
+	 * 描述
+	 */
 	private String description;
 
+	/**
+	 * 资源
+	 */
 	private Resource resource;
 
 

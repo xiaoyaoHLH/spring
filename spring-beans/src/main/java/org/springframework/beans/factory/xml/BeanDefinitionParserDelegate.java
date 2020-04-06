@@ -81,6 +81,8 @@ import org.springframework.util.xml.DomUtils;
  * @since 2.0
  * @see ParserContext
  * @see DefaultBeanDefinitionDocumentReader
+ *
+ * 用于主解析器和任何扩展
  */
 public class BeanDefinitionParserDelegate {
 
@@ -257,6 +259,7 @@ public class BeanDefinitionParserDelegate {
 
 	/**
 	 * Create a new BeanDefinitionParserDelegate associated with the supplied
+	 * 创建一个新的与所提供的相关联的BeanDefinitionParserDelegate
 	 * {@link XmlReaderContext}.
 	 */
 	public BeanDefinitionParserDelegate(XmlReaderContext readerContext) {
@@ -582,6 +585,7 @@ public class BeanDefinitionParserDelegate {
 			// 解析Property子元素
 			parsePropertyElements(ele, bd);
 			// 解析Qualifier子元素
+			// Qualifier的意思是合格者，通过这个标示，表明了哪个实现类才是我们所需要的
 			parseQualifierElements(ele, bd);
 
 			bd.setResource(this.readerContext.getResource());
@@ -1129,9 +1133,11 @@ public class BeanDefinitionParserDelegate {
 	 * {@code <value>} tag that might be created
 	 */
 	public Object parsePropertySubElement(Element ele, BeanDefinition bd, String defaultValueType) {
+		// 是否为自定义标签
 		if (!isDefaultNamespace(ele)) {
 			return parseNestedCustomElement(ele, bd);
 		}
+		// bean
 		else if (nodeNameEquals(ele, BEAN_ELEMENT)) {
 			BeanDefinitionHolder nestedBd = parseBeanDefinitionElement(ele, bd);
 			if (nestedBd != null) {
@@ -1139,15 +1145,20 @@ public class BeanDefinitionParserDelegate {
 			}
 			return nestedBd;
 		}
+
+		// ref
 		else if (nodeNameEquals(ele, REF_ELEMENT)) {
 			// A generic reference to any name of any bean.
+			// 对任何bean的任何名称的通用引用。
 			String refName = ele.getAttribute(BEAN_REF_ATTRIBUTE);
 			boolean toParent = false;
 			if (!StringUtils.hasLength(refName)) {
 				// A reference to the id of another bean in the same XML file.
+				// 解析local
 				refName = ele.getAttribute(LOCAL_REF_ATTRIBUTE);
 				if (!StringUtils.hasLength(refName)) {
 					// A reference to the id of another bean in a parent context.
+					// 解析parent
 					refName = ele.getAttribute(PARENT_REF_ATTRIBUTE);
 					toParent = true;
 					if (!StringUtils.hasLength(refName)) {
@@ -1164,12 +1175,15 @@ public class BeanDefinitionParserDelegate {
 			ref.setSource(extractSource(ele));
 			return ref;
 		}
+		// 解析idref
 		else if (nodeNameEquals(ele, IDREF_ELEMENT)) {
 			return parseIdRefElement(ele);
 		}
+		// 解析value
 		else if (nodeNameEquals(ele, VALUE_ELEMENT)) {
 			return parseValueElement(ele, defaultValueType);
 		}
+		// 解析null
 		else if (nodeNameEquals(ele, NULL_ELEMENT)) {
 			// It's a distinguished null value. Let's wrap it in a TypedStringValue
 			// object in order to preserve the source location.
@@ -1178,18 +1192,23 @@ public class BeanDefinitionParserDelegate {
 			return nullHolder;
 		}
 		else if (nodeNameEquals(ele, ARRAY_ELEMENT)) {
+			// 解析array
 			return parseArrayElement(ele, bd);
 		}
 		else if (nodeNameEquals(ele, LIST_ELEMENT)) {
+			// 解析list
 			return parseListElement(ele, bd);
 		}
 		else if (nodeNameEquals(ele, SET_ELEMENT)) {
+			// 解析set
 			return parseSetElement(ele, bd);
 		}
 		else if (nodeNameEquals(ele, MAP_ELEMENT)) {
+			// 解析map
 			return parseMapElement(ele, bd);
 		}
 		else if (nodeNameEquals(ele, PROPS_ELEMENT)) {
+			// 解析props
 			return parsePropsElement(ele);
 		}
 		else {
@@ -1537,6 +1556,7 @@ public class BeanDefinitionParserDelegate {
 
 		// Decorate based on custom attributes first.
 		NamedNodeMap attributes = ele.getAttributes();
+		// 遍历所有的属性，看看是否有适用于修饰的属性
 		for (int i = 0; i < attributes.getLength(); i++) {
 			Node node = attributes.item(i);
 			finalDefinition = decorateIfRequired(node, finalDefinition, containingBd);
@@ -1544,6 +1564,7 @@ public class BeanDefinitionParserDelegate {
 
 		// Decorate based on custom nested elements.
 		NodeList children = ele.getChildNodes();
+		// 遍历所有的子节点，看看是否有适用于修饰的属性
 		for (int i = 0; i < children.getLength(); i++) {
 			Node node = children.item(i);
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
@@ -1556,10 +1577,15 @@ public class BeanDefinitionParserDelegate {
 	public BeanDefinitionHolder decorateIfRequired(
 			Node node, BeanDefinitionHolder originalDef, BeanDefinition containingBd) {
 
+		// 获取自定义标签的命名空间
 		String namespaceUri = getNamespaceURI(node);
+
+		// 对于非默认的标签进行修饰
 		if (!isDefaultNamespace(namespaceUri)) {
+			// 根据命名空间找到对应的处理器
 			NamespaceHandler handler = this.readerContext.getNamespaceHandlerResolver().resolve(namespaceUri);
 			if (handler != null) {
+				// 进行修饰
 				return handler.decorate(node, originalDef, new ParserContext(this.readerContext, this, containingBd));
 			}
 			else if (namespaceUri != null && namespaceUri.startsWith("http://www.springframework.org/")) {

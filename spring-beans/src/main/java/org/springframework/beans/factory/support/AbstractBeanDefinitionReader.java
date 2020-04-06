@@ -204,16 +204,21 @@ public abstract class AbstractBeanDefinitionReader implements EnvironmentCapable
 	 * @see #loadBeanDefinitions(org.springframework.core.io.Resource[])
 	 */
 	public int loadBeanDefinitions(String location, Set<Resource> actualResources) throws BeanDefinitionStoreException {
+		// 获取一个资源加载类
 		ResourceLoader resourceLoader = getResourceLoader();
 		if (resourceLoader == null) {
 			throw new BeanDefinitionStoreException(
 					"Cannot import bean definitions from location [" + location + "]: no ResourceLoader available");
 		}
 
+		// 根据模式配置加载路径资源
 		if (resourceLoader instanceof ResourcePatternResolver) {
 			// Resource pattern matching available.
 			try {
+				// 解析资源通配拿到资源数组
 				Resource[] resources = ((ResourcePatternResolver) resourceLoader).getResources(location);
+
+				// 装载资源
 				int loadCount = loadBeanDefinitions(resources);
 				if (actualResources != null) {
 					for (Resource resource : resources) {
@@ -231,8 +236,10 @@ public abstract class AbstractBeanDefinitionReader implements EnvironmentCapable
 			}
 		}
 		else {
-			// Can only load single resources by absolute URL.
+			// 只能根据绝对路径加载单个
 			Resource resource = resourceLoader.getResource(location);
+
+			// 装载资源
 			int loadCount = loadBeanDefinitions(resource);
 			if (actualResources != null) {
 				actualResources.add(resource);
