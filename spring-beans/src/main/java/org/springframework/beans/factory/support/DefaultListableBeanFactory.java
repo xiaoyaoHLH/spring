@@ -232,10 +232,11 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	/**
 	 * Specify an id for serialization purposes, allowing this BeanFactory to be
 	 * deserialized from this id back into the BeanFactory object, if needed.
+	 * 序列号设置，同时设置到serializableFactories中
 	 */
 	public void setSerializationId(String serializationId) {
 		if (serializationId != null) {
-			serializableFactories.put(serializationId, new WeakReference<DefaultListableBeanFactory>(this));
+			serializableFactories.put(serializationId, new WeakReference<>(this));
 		}
 		else if (this.serializationId != null) {
 			serializableFactories.remove(this.serializationId);
@@ -344,6 +345,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	}
 
 
+	/**
+	 * 复制其他配置信息
+	 */
 	@Override
 	public void copyConfigurationFrom(ConfigurableBeanFactory otherFactory) {
 		super.copyConfigurationFrom(otherFactory);
@@ -363,6 +367,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 	@Override
 	public <T> T getBean(Class<T> requiredType) throws BeansException {
+		// 根据class类型获取bean
 		return getBean(requiredType, (Object[]) null);
 	}
 

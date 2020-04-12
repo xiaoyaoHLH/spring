@@ -90,19 +90,26 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 	 * Obtain an object to expose from the given FactoryBean.
 	 * @param factory the FactoryBean instance
 	 * @param beanName the name of the bean
-	 * @param shouldPostProcess whether the bean is subject to post-processing
+	 * @param shouldPostProcess whether the bean is subject to post-processing 是否对bean进行后处理
 	 * @return the object obtained from the FactoryBean
 	 * @throws BeanCreationException if FactoryBean object creation failed
 	 * @see org.springframework.beans.factory.FactoryBean#getObject()
+	 *
+	 * 从FactoryBean中获取对象
 	 */
 	protected Object getObjectFromFactoryBean(FactoryBean<?> factory, String beanName, boolean shouldPostProcess) {
+		// 单例模式
 		if (factory.isSingleton() && containsSingleton(beanName)) {
 			synchronized (getSingletonMutex()) {
+				// 再次检查实例对象有没有加载完成
 				Object object = this.factoryBeanObjectCache.get(beanName);
 				if (object == null) {
+					// 真正的获取
 					object = doGetObjectFromFactoryBean(factory, beanName);
+
 					// Only post-process and store if not put there already during getObject() call above
 					// (e.g. because of circular reference processing triggered by custom getBean calls)
+					// 再一次获取
 					Object alreadyThere = this.factoryBeanObjectCache.get(beanName);
 					if (alreadyThere != null) {
 						object = alreadyThere;
@@ -123,8 +130,11 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 				return (object != NULL_OBJECT ? object : null);
 			}
 		}
+		// 非单例
 		else {
+			// 真正的获取
 			Object object = doGetObjectFromFactoryBean(factory, beanName);
+
 			if (object != null && shouldPostProcess) {
 				try {
 					object = postProcessObjectFromFactoryBean(object, beanName);
@@ -150,6 +160,7 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 
 		Object object;
 		try {
+			// 进行权限校验
 			if (System.getSecurityManager() != null) {
 				AccessControlContext acc = getAccessControlContext();
 				try {
@@ -165,6 +176,7 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 				}
 			}
 			else {
+				// 获取对象
 				object = factory.getObject();
 			}
 		}
